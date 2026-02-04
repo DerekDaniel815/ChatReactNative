@@ -73,7 +73,7 @@ const chatSlice = createSlice({
     ) => {
       const { roomKey, message } = action.payload;
       const current = state.messagesByRoom[roomKey] ?? [];
-      debugger;
+      
 
       // dedupe basico por id (evita duplicados si te llega por REST y socket)
       if (current.some(m => m.id === message.id)) return;
