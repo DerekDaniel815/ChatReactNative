@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   Text,
@@ -9,31 +9,29 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginThunk } from '@/store/auth/authThunks';
-import { LoginRequest } from '@/store/auth/authTypes';
+import { useAppDispatch } from '@/store/hooks';
+import { registerThunk } from '@/store/auth/authThunks';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
-export function Login({ navigation }: Props) {
-  const [name, setName] = useState('');
+export function Register({ navigation }: Props) {
   const dispatch = useAppDispatch();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { user, accessToken } = useAppSelector(s => s.auth);
-  useEffect(() => {
-    if (user && accessToken) {
-      navigation.replace('TabsNavigator', {
-        name: user.username,
-      });
-    }
-  }, [user, accessToken, navigation]);
+  // console.log('Auth status:', status, 'Error:', error);
 
   const onEnter = async () => {
     const fields = [
       {
         value: name,
-        title: 'Falta nombre o correo',
-        message: 'Ingresa tu nombre o correo para continuar.',
+        title: 'Falta nombre',
+        message: 'Ingresa tu nombre para continuar.',
+      },
+      {
+        value: email,
+        title: 'Falta correo',
+        message: 'Ingresa tu correo para continuar.',
       },
       {
         value: password,
@@ -48,35 +46,38 @@ export function Login({ navigation }: Props) {
         return;
       }
     }
-    const payload: LoginRequest = {
-      identifier: name.trim(),
+    const payload = {
+      username: name.trim(),
+      email: email.trim(),
       password: password.trim(),
     };
-    const res = await dispatch(loginThunk(payload));
+    const res = await dispatch(registerThunk(payload));
 
-    if (loginThunk.fulfilled.match(res)) {
-      navigation.replace('TabsNavigator', {
-        name: name.trim(),
-      });
+    if (registerThunk.fulfilled.match(res)) {
+      // Ya se guardo en Redux y tokens en Keychain
+      navigation.replace('Login'); // o directo a Home si quieres
     } else {
       Alert.alert('Error', res.payload ?? 'No se pudo registrar');
     }
   };
 
-  const nextRegister = () => {
-    navigation.replace('Register');
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Registrar</Text>
 
-      <Text>Nombre o Correo</Text>
+      <Text>Nombre</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         placeholder="Ej: Derek"
         autoCapitalize="words"
+        style={styles.input}
+      />
+      <Text>Correo</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Ej: user@gmail.com"
         style={styles.input}
       />
       <Text>Contraseña</Text>
@@ -87,10 +88,8 @@ export function Login({ navigation }: Props) {
         style={styles.input}
       />
 
-      <Text onPress={nextRegister}>Registar</Text>
-
       <TouchableOpacity onPress={onEnter} style={styles.button}>
-        <Text style={styles.buttonText}>Entrar</Text>
+        <Text style={styles.buttonText}>registrar</Text>
       </TouchableOpacity>
     </View>
   );
