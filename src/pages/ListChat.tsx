@@ -1,11 +1,13 @@
 import { ChatStackParamList } from '@/navigation/AppNavigator';
+import { clearChatState } from '@/store/chat/chatSlice';
 import { ChatItem, fetchChatListThunk } from '@/store/chat/chatThunks';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Alert,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +20,7 @@ export function ListChat({ navigation }: Props) {
   const { user } = useAppSelector(s => s.auth);
   const { itemsChats, chatsStatus } = useAppSelector(s => s.chat);
   const dispatch = useAppDispatch();
+
   useEffect(() => {
     if (chatsStatus === 'idle') {
       dispatch(fetchChatListThunk());
@@ -29,18 +32,60 @@ export function ListChat({ navigation }: Props) {
   const goChat = (item: ChatItem) => {
     navigation.navigate('Chat', { name: item.title, chatId: item.id });
   };
+  const goSuggestions = () => {
+    navigation.navigate('ListSuggestions'); // pon el nombre real de tu screen
+  };
+
+  const onLogout = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Seguro que quieres salir?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: () => {
+            dispatch(clearChatState());
+            // dispatch(logout());
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.title}>Chats</Text>
             <Text style={styles.subtitle}>
               {user ? `Conectado como ${user.username}` : 'No autenticado'}
             </Text>
           </View>
+
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={goSuggestions}
+              style={styles.iconBtn}
+            >
+              <Text style={styles.iconBtnText}>👥</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onLogout}
+              style={[styles.iconBtn, styles.iconBtnDanger]}
+            >
+              <Text style={styles.iconBtnText}>⎋</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        <View style={styles.divider} />
 
         {/* Lista */}
         <FlatList
@@ -96,6 +141,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+
+  iconBtn: {
+    height: 38,
+    minWidth: 38,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#14141b',
+    borderWidth: 1,
+    borderColor: '#232331',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBtnDanger: {
+    borderColor: '#3a1f1f',
+    backgroundColor: '#1a0f0f',
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#151520',
+    marginBottom: 10,
+  },
+
+  iconBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   title: { color: '#fff', fontSize: 28, fontWeight: '700' },
   subtitle: { color: '#a7a7b3', marginTop: 4, fontSize: 13 },
 
