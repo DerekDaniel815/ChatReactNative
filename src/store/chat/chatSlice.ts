@@ -53,7 +53,6 @@ const chatSlice = createSlice({
       }>,
     ) => {
       const { chatId, text, createdAt } = action.payload;
-      debugger
       const idx = state.itemsChats.findIndex(c => c.id === chatId);
       if (idx === -1) return;
 
